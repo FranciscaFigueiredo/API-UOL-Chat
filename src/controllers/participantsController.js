@@ -3,6 +3,7 @@ import { participantSchema } from '../validations/participantsValidation.js';
 
 async function postParticipants(req, res) {
     await connection.mongoClient.connect();
+
     const db = connection.db.collection('participants');
     const { name } = req.body;
 
@@ -36,7 +37,7 @@ async function getParticipants(req, res) {
     const db = connection.db.collection('participants');
 
     try {
-        const participants = db.find({});
+        const participants = await db.find().toArray();
         return res.send(participants);
     } catch (error) {
         return res.status(500).send(error);
