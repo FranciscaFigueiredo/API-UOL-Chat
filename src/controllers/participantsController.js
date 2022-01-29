@@ -1,9 +1,16 @@
 import * as connection from '../database.js';
 import { participantSchema } from '../validations/participantsValidation.js';
 
-async function postParticipants(req, res) {
+async function connectDB() {
     await connection.mongoClient.connect();
+
     const db = connection.db.collection('participants');
+    return db;
+}
+
+async function postParticipants(req, res) {
+    const db = await connectDB();
+
     const { name } = req.body;
 
     const validate = participantSchema.validate({
@@ -23,7 +30,20 @@ async function postParticipants(req, res) {
 
         await db.insertOne({ name, lastStatus: Date.now() });
 
+        await connection.mongoClient.close();
         return res.sendStatus(201);
+    } catch (error) {
+        await connection.mongoClient.close();
+        return res.status(500).send(error);
+    }
+}
+
+async function getParticipants(req, res) {
+    const db = await connectDB();
+
+    try {
+        const participants = await db.find().toArray();
+        return res.send(participants);
     } catch (error) {
         return res.status(500).send(error);
     }
@@ -31,4 +51,5 @@ async function postParticipants(req, res) {
 
 export {
     postParticipants,
+    getParticipants,
 };
