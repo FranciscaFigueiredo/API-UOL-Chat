@@ -1,6 +1,9 @@
 import dayjs from 'dayjs';
+import { ObjectId } from 'mongodb';
 import { closeConnection, connection } from '../database.js';
 import BodyError from '../errors/BodyError.js';
+import NotFoundError from '../errors/NotFoundError.js';
+import UnauthorizedError from '../errors/UnauthorizedError.js';
 // eslint-disable-next-line import/no-cycle
 import * as participantsService from './participantsService.js';
 
@@ -61,8 +64,27 @@ async function find({ from, limit }) {
     return messages.reverse();
 }
 
+async function deleteById({ name, id }) {
+    const db = await connection({ column: 'messages' });
+
+    const message = await db.findOne({ _id: new ObjectId(id) });
+
+    if (!message) {
+        throw new NotFoundError('This message does not exist');
+    }
+
+    if (message.from !== name) {
+        throw new UnauthorizedError('The participant does not own this message');
+    }
+
+    await db.deleteOne({ _id: new ObjectId(id) });
+
+    await closeConnection();
+}
+
 export {
     sendMessage,
     create,
     find,
+    deleteById,
 };
