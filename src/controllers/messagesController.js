@@ -44,8 +44,10 @@ async function postMessage(req, res) {
 
 async function getMessages(req, res) {
     const from = req.headers?.user;
+    const limit = Number(req.query.limit);
+
     try {
-        const messages = await messagesService.find({ from });
+        const messages = await messagesService.find({ from, limit });
 
         await closeConnection();
         return res.send(messages);

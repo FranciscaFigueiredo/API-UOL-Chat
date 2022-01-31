@@ -31,10 +31,10 @@ async function create({
     return true;
 }
 
-async function find({ from }) {
+async function find({ from, limit }) {
     const db = await connection({ column: 'messages' });
 
-    const messages = await db.find({ $or: [{ to: 'Todos' }, { to: from }, { from }] }).toArray();
+    const messages = await db.find({ $or: [{ to: 'Todos' }, { to: from }, { from }] }).limit(limit).toArray();
 
     await closeConnection();
 
