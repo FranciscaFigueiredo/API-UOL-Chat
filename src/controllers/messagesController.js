@@ -1,8 +1,7 @@
-import dayjs from 'dayjs';
-import { closeConnection, connection } from '../database.js';
+import { closeConnection } from '../database.js';
 import BodyError from '../errors/BodyError.js';
 import * as messagesService from '../services/messagesService.js';
-import * as participantsService from '../services/participantsService.js';
+
 import { messageSchema } from '../validations/messagesValidation.js';
 
 async function postMessage(req, res) {
@@ -24,24 +23,13 @@ async function postMessage(req, res) {
         }
         const from = req.headers?.user;
 
-        const db = await connection({ column: 'messages' });
-
-        const searchParticipant = await participantsService.findParticipantByName({ name: from });
-
-        if (!searchParticipant) {
-            throw new BodyError('Invalid participant');
-        }
-        const time = dayjs().locale('pt-Br').format('HH:mm:ss');
-
-        await db.insertOne({
+        await messagesService.create({
             from,
             to,
             text,
             type,
-            time,
         });
 
-        await closeConnection();
         return res.sendStatus(201);
     } catch (error) {
         await closeConnection();
@@ -57,7 +45,7 @@ async function postMessage(req, res) {
 async function getMessages(req, res) {
     const from = req.headers?.user;
     try {
-        const messages = await messagesService.findMessages({ from });
+        const messages = await messagesService.find({ from });
 
         await closeConnection();
         return res.send(messages);
