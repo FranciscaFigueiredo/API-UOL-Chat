@@ -1,5 +1,7 @@
 import { closeConnection } from '../database.js';
 import BodyError from '../errors/BodyError.js';
+import NotFoundError from '../errors/NotFoundError.js';
+import UnauthorizedError from '../errors/UnauthorizedError.js';
 import * as messagesService from '../services/messagesService.js';
 
 import { messageSchema } from '../validations/messagesValidation.js';
@@ -62,7 +64,32 @@ async function getMessages(req, res) {
     }
 }
 
+async function deleteMessageById(req, res) {
+    const name = req.headers?.user;
+    const { id } = req.params;
+
+    try {
+        const messages = await messagesService.deleteById({ name, id });
+
+        await closeConnection();
+        return res.send(messages);
+    } catch (error) {
+        await closeConnection();
+
+        if (error instanceof UnauthorizedError) {
+            return res.sendStatus(401);
+        }
+
+        if (error instanceof NotFoundError) {
+            return res.sendStatus(404);
+        }
+
+        return res.status(500).send(error);
+    }
+}
+
 export {
     postMessage,
     getMessages,
+    deleteMessageById,
 };
