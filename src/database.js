@@ -2,9 +2,19 @@ import './setup.js';
 import { MongoClient } from 'mongodb';
 
 const mongoClient = new MongoClient(process.env.MONGO_URI);
-const db = mongoClient.db(process.env.DB_NAME);
+
+async function connection({ column }) {
+    await mongoClient.connect();
+
+    const db = mongoClient.db(process.env.DB_NAME).collection(column);
+    return db;
+}
+
+async function closeConnection() {
+    await mongoClient.close();
+}
 
 export {
-    mongoClient,
-    db,
+    connection,
+    closeConnection,
 };
