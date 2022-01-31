@@ -1,21 +1,16 @@
 import dayjs from 'dayjs';
 import { closeConnection, connection } from '../database.js';
 import BodyError from '../errors/BodyError.js';
+// eslint-disable-next-line import/no-cycle
 import * as participantsService from './participantsService.js';
 
-async function create({
+async function sendMessage({
     from,
     to,
     text,
     type,
 }) {
     const db = await connection({ column: 'messages' });
-
-    const searchParticipant = await participantsService.findParticipantByName({ name: from });
-
-    if (!searchParticipant) {
-        throw new BodyError('Invalid participant');
-    }
     const time = dayjs().locale('pt-Br').format('HH:mm:ss');
 
     await db.insertOne({
@@ -25,6 +20,25 @@ async function create({
         type,
         time,
     });
+}
+
+async function create({
+    from,
+    to,
+    text,
+    type,
+}) {
+    const searchParticipant = await participantsService.findParticipantByName({ name: from });
+
+    if (!searchParticipant) {
+        throw new BodyError('Invalid participant');
+    }
+    await sendMessage({
+        from,
+        to,
+        text,
+        type,
+    });
 
     await closeConnection();
 
@@ -32,16 +46,23 @@ async function create({
 }
 
 async function find({ from, limit }) {
+    const searchParticipant = await participantsService.findParticipantByName({ name: from });
+
+    if (!searchParticipant) {
+        throw new BodyError('Invalid participant');
+    }
+
     const db = await connection({ column: 'messages' });
 
-    const messages = await db.find({ $or: [{ to: 'Todos' }, { to: from }, { from }] }).limit(limit).toArray();
+    const messages = await db.find({ $or: [{ to: 'Todos' }, { to: from }, { from }] }).sort({ time: -1 }).limit(limit).toArray();
 
     await closeConnection();
 
-    return messages;
+    return messages.reverse();
 }
 
 export {
+    sendMessage,
     create,
     find,
 };

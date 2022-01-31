@@ -53,6 +53,11 @@ async function getMessages(req, res) {
         return res.send(messages);
     } catch (error) {
         await closeConnection();
+
+        if (error instanceof BodyError) {
+            return res.sendStatus(422);
+        }
+
         return res.status(500).send(error);
     }
 }
