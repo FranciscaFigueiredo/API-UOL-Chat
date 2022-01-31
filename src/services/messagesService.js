@@ -32,13 +32,19 @@ async function create({
 }
 
 async function find({ from, limit }) {
+    const searchParticipant = await participantsService.findParticipantByName({ name: from });
+
+    if (!searchParticipant) {
+        throw new BodyError('Invalid participant');
+    }
+
     const db = await connection({ column: 'messages' });
 
-    const messages = await db.find({ $or: [{ to: 'Todos' }, { to: from }, { from }] }).limit(limit).toArray();
+    const messages = await db.find({ $or: [{ to: 'Todos' }, { to: from }, { from }] }).sort({ time: -1 }).limit(limit).toArray();
 
     await closeConnection();
 
-    return messages;
+    return messages.reverse();
 }
 
 export {

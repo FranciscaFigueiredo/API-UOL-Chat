@@ -1,6 +1,8 @@
 import { closeConnection, connection } from '../database.js';
 import ConflictError from '../errors/ConflictError.js';
 
+import * as messagesService from './messagesService.js';
+
 async function findParticipantByName({ name }) {
     const db = await connection({ column: 'participants' });
 
@@ -19,6 +21,13 @@ async function create({ name }) {
     }
 
     await db.insertOne({ name, lastStatus: Date.now() });
+
+    await messagesService.create({
+        from: name,
+        to: 'Todos',
+        text: 'entra na sala...',
+        type: 'status',
+    });
 
     await closeConnection();
 }
