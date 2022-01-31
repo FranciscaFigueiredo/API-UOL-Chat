@@ -65,16 +65,10 @@ async function find({ from, limit }) {
 }
 
 async function deleteById({ name, id }) {
-    // const searchParticipant = await participantsService.findParticipantByName({ name });
-
-    // if (!searchParticipant) {
-    //     throw new BodyError('Invalid participant');
-    // }
-
     const db = await connection({ column: 'messages' });
 
     const message = await db.findOne({ _id: new ObjectId(id) });
-    console.log(message);
+
     if (!message) {
         throw new NotFoundError('This message does not exist');
     }
